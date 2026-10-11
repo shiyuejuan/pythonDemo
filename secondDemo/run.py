@@ -47,6 +47,8 @@ def get_client():
     global _client
     if _client is None:
         env = os.getenv("APP_ENV", "development")
+        # 注意：Path(f".env.{env}") 这类相对路径的解析基准是"当前工作目录（CWD）"，
+        # 不是本文件所在的位置；所以优先用 load_env() 按 CWD → 脚本目录 → 项目根查找。
         env_file = load_env() or Path(f".env.{env}")
         api_key = os.getenv("DEEPSEEK_API_KEY")
         if not api_key:
