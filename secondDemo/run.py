@@ -77,4 +77,6 @@ def runDemo(prompt="什么是 API？", model=None, system=DEFAULT_SYSTEM_PROMPT,
 
 
 if __name__ == "__main__":
+    # 只有 python run.py 时才会走到这里
+    # 被 import 时整块跳过
     runDemo()
