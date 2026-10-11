@@ -1,11 +1,13 @@
 import os
+#导入路径对象 Path，方便构造文件名并检查文件是否存在。
 from pathlib import Path
-
+#导入第三方 python-dotenv 包中的 load_dotenv；需先安装 python-dotenv。
 from dotenv import load_dotenv
 from openai import OpenAI as DeepSeekClient
 
-
+#读取 APP_ENV；如果未设置，默认使用 development。如果 APP_ENV 存在但值为空字符串，不会使用默认值。
 env = os.getenv("APP_ENV", "development")
+#拼出对应的 .env 文件名，如 .env.development 或 .env.test。这里用相对路径，解析位置是运行进程的当前工作目录，不一定是脚本目录。
 env_file = Path(f".env.{env}")
 
 if env_file.exists():
