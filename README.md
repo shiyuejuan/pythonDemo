@@ -58,16 +58,27 @@ MODEL=deepseek-flash
 python firstDemo/first.py
 ```
 
-脚本会读取 `DEEPSEEK_API_KEY`，向 DeepSeek 发起一次对话请求，并打印回答内容与完整响应 JSON。
+脚本会读取 `DEEPSEEK_API_KEY`，向 DeepSeek 发起一次对话请求，并打印回答内容与完整响应。
 
-> ⚠️ 环境文件是相对**当前工作目录**查找的，所以请在项目根目录运行。若一定要在 `firstDemo/` 里执行，需把 `.env.development` 放到该目录下。
+想在**别的文件里调用**，导入封装好的函数即可：
+
+```python
+from firstDemo.first import runDemo
+
+answer = runDemo("什么是 API？", verbose=False)
+```
+
+运行现成的调用示例：`python firstDemo/call_demo.py`。详细参数见 `firstDemo/readme.md`。
+
+> 配置文件会在「当前工作目录 → `first.py` 所在目录 → 项目根目录」中依次查找，所以从哪个目录运行都能读到 `.env.development`。
 
 ## 项目结构
 
 ```text
 pythonDemo/
 ├── firstDemo/
-│   ├── first.py          # 主程序：调用 DeepSeek 对话接口
+│   ├── first.py          # 主程序：封装 runDemo()，可直接运行也可被导入
+│   ├── call_demo.py      # 调用示例：演示如何导入并调用 runDemo()
 │   └── readme.md         # 该目录的说明
 ├── .env.example          # 环境变量模板（可提交）
 ├── .env.development      # 真实密钥（已被忽略，禁止提交）
