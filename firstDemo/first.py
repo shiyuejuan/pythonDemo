@@ -34,4 +34,9 @@ response = client.chat.completions.create(
 )
 
 print(response.choices[0].message.content)
+"""
+写法	返回类型	说明
+response.model_dump_json(indent=2)	str	已是 JSON 文本，直接 print 或写文件
+response.model_dump()	dict	拿到的是字典，可以下标取值
+"""
 print(response.model_dump_json(indent=2))
