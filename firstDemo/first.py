@@ -24,7 +24,7 @@ client = DeepSeekClient(
 )
 
 response = client.chat.completions.create(
-    model="deepseek-chat",
+    model="deepseek-flash",
     messages=[
         {"role": "system", "content": "你是一个简洁的助手，回答不超过两句话。"},
         {"role": "user", "content": "什么是 API？"},
