@@ -11,6 +11,8 @@
     本文件与 run.py 在同一目录，可以直接 `from run import runDemo`。
     本目录名含连字符（contextLengthExceeded2），不是合法的 Python 包名，
     所以无法从项目根写 `from contextLengthExceeded2.run import runDemo`。
+
+详细思路见同目录 readme.md。
 """
 
 import os
@@ -42,6 +44,12 @@ def summarize(text: str) -> str:
     免得每次验证逻辑都要花一次真实 API 调用。
     """
     model = os.getenv("MODEL") or "deepseek-flash"
+
+    # 为什么这里只发一条 user 消息、没有 system：
+    #   system 是可选的人设层（设定层），本次只是一次性文本转换任务，没有需要
+    #   跨轮维持的人设，所以用不上。真正必须的是 messages 不能为空，
+    #   另外不要把「指令」和「正文」拆到两条消息里——实测那样模型会把正文
+    #   当成一个独立提问直接回答，反而不做摘要。
     resp = get_client().chat.completions.create(
         model=model,
         messages=[
@@ -52,6 +60,10 @@ def summarize(text: str) -> str:
             }
         ],
     )
+
+    # content 可能是 None（响应被过滤等情况），None 没有 strip 方法会直接报错，
+    # 所以先用 or "" 兜底；strip() 负责去掉首尾空白（含换行、制表符），
+    # 内部换行不受影响，模型的返回常带首尾多余换行，剪掉更干净。
     return (resp.choices[0].message.content or "").strip()
 
 
@@ -63,6 +75,19 @@ def summarize_old_messages(history, keep_recent=KEEP_RECENT):
     # 第一步：拆成「人设」「旧摘要」「对话」三部分。
     # 用 role 过滤，而不是写死 history[0] / history[1:] 这种下标——
     # 摘要消息一旦生成，它也是 system 角色，按下标取就会把它当成对话内容。
+    #
+    # 列表推导式等价于「先建空列表 → 逐个遍历 → 条件成立就追加」：
+    #     persona = []
+    #     for m in history:
+    #         if m["role"] == "system" and not m["content"].startswith(SUMMARY_PREFIX):
+    #             persona.append(m)
+    #
+    # 两个条件用 and 连接，左边的 role 判断先执行：左边为假时右边不再求值
+    # （短路），所以 content 为 None 的对话消息不会引发 AttributeError。
+    # 第二道筛子 not m["content"].startswith(SUMMARY_PREFIX)：startswith 返回
+    # True/False，加 not 取反，意思是「这条内容不以『【此前对话摘要】』开头」，
+    # 摘要消息由此被排除。残留风险：system 消息的 content 若为 None 仍会抛
+    # AttributeError，要彻底防住可写成 not (m.get("content") or "").startswith(...)。
     persona = [
         m
         for m in history
@@ -85,6 +110,12 @@ def summarize_old_messages(history, keep_recent=KEEP_RECENT):
     # 直接切可能落在 assistant 上（比如 keep_recent 是奇数、或中途某轮报错
     # 导致消息没严格交替），有些模型遇到「首条是 assistant」会直接报 400。
     # 往后挪一条而不是丢掉首条，可以保住「问 + 答」成对。
+    #
+    # 这里用的是切片 s[start:stop:step]，规则是「含头不含尾」：
+    #     省略即默认 —— s[:n] 前 n 个字符；s[n:] 从第 n 个到末尾；s[:] 完整复制
+    #     dialog[:start] 取到 start 之前，dialog[start:] 从 start 取到末尾
+    #     s[::-1] 是反转字符串的标准写法；step 为负时 start/stop 默认值自动对调
+    #     空切片不报错：s[2:2]、s[4:2] 都返回 ''，不会抛异常
     start = max(0, len(dialog) - keep_recent)
     while start < len(dialog) and dialog[start]["role"] != "user":
         start += 1
