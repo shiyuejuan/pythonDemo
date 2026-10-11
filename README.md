@@ -1,19 +1,38 @@
 # pythonDemo
 
-调用 DeepSeek 大模型 API 的最小可运行示例（Python）。
+调用 DeepSeek 大模型 API 的最小可运行示例（Python）。用最少的代码走通「读取密钥 → 发起对话 → 打印结果」的完整流程。
+
+## 目录
+
+- [环境要求](#环境要求)
+- [快速开始](#快速开始)
+  - [1. 安装依赖](#1-安装依赖)
+  - [2. 配置密钥](#2-配置密钥)
+  - [3. 运行](#3-运行)
+- [项目结构](#项目结构)
+- [接口说明](#接口说明)
+- [安全提示](#安全提示)
 
 ## 环境要求
 
-- Python 3.8+
-- 依赖：`openai`（DeepSeek 兼容 OpenAI 接口，因此复用该 SDK）、`python-dotenv`
+| 项目 | 要求 |
+| --- | --- |
+| Python | 3.8 及以上 |
+| 依赖 | `openai`（DeepSeek 兼容 OpenAI 接口，故复用该 SDK）、`python-dotenv` |
+
+> DeepSeek 官方接口与 OpenAI SDK 兼容，因此代码中 `import openai` 即可直接调用，只需把 `base_url` 指向 DeepSeek。
+
+## 快速开始
+
+### 1. 安装依赖
 
 ```bash
 pip install openai python-dotenv
 ```
 
-## 配置密钥
+### 2. 配置密钥
 
-不要修改或提交 `.env.development`，正确做法是复制模板后填入自己的密钥：
+不要直接修改或提交 `.env.development`。正确做法是复制模板，再填入自己的密钥：
 
 ```bash
 cp .env.example .env.development
@@ -29,21 +48,44 @@ MODEL=deepseek-flash
 
 密钥申请地址：<https://platform.deepseek.com/api_keys>
 
-## 运行
+> 脚本会按 `APP_ENV` 的值加载对应的环境文件，例如 `APP_ENV=development` 读取 `.env.development`，`APP_ENV=test` 读取 `.env.test`。
+
+### 3. 运行
+
+在**项目根目录**执行：
 
 ```bash
 python firstDemo/first.py
 ```
 
-脚本会按 `APP_ENV` 加载对应环境文件（如 `.env.development`），读取 `DEEPSEEK_API_KEY`，向 DeepSeek 发起一次对话请求并打印结果。
+脚本会读取 `DEEPSEEK_API_KEY`，向 DeepSeek 发起一次对话请求，并打印回答内容与完整响应 JSON。
+
+> ⚠️ 环境文件是相对**当前工作目录**查找的，所以请在项目根目录运行。若一定要在 `firstDemo/` 里执行，需把 `.env.development` 放到该目录下。
+
+## 项目结构
+
+```text
+pythonDemo/
+├── firstDemo/
+│   ├── first.py          # 主程序：调用 DeepSeek 对话接口
+│   └── readme.md         # 该目录的说明
+├── .env.example          # 环境变量模板（可提交）
+├── .env.development      # 真实密钥（已被忽略，禁止提交）
+├── .gitignore            # 忽略规则
+├── check-secrets.sh      # 密钥泄露自检脚本
+└── README.md
+```
 
 ## 接口说明
 
 | 参数 | 值 |
 | --- | --- |
-| base_url | `https://api.deepseek.com`（兼容写法 `https://api.deepseek.com/v1`） |
-| model | `deepseek-flash` 或 `deepseek-v4-pro` |
+| `base_url` | `https://api.deepseek.com`（兼容写法：`https://api.deepseek.com/v1`） |
+| `model` | `deepseek-flash` 或 `deepseek-v4-pro` |
 | 接口路径 | `/chat/completions` |
+| 认证方式 | 请求头携带 `Authorization: Bearer <DEEPSEEK_API_KEY>` |
+
+> `base_url` 里的 `/v1` 只是为兼容 OpenAI SDK 而保留的路径写法，与模型版本无关，加或不加都会请求到 `https://api.deepseek.com/chat/completions`。
 
 ## 安全提示
 
@@ -65,4 +107,4 @@ python firstDemo/first.py
 
 脚本会检查 `.gitignore` 文件名是否正常、密钥文件是否真被忽略、已跟踪文件中是否有漏网密钥、暂存区是否干净。
 
-> 注意：`.gitignore` 一旦被改名（例如变成名字前带空格的 ` .gitignore`），Git 就不会读取它，忽略规则会**整体失效**。用 `ls -b | grep gitignore` 可以一眼看出文件名是否异常。
+> **常见的坑**：`.gitignore` 一旦被改名（例如变成名字前带空格的 ` .gitignore`），Git 就不会读取它，**所有忽略规则会同时失效**。用 `ls -b | grep gitignore` 可以一眼看出文件名是否异常。
