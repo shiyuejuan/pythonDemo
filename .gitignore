@@ -1,0 +1,17 @@
+# 环境变量文件 —— 绝对不能提交
+.env
+.env.local
+.env.*
+.env.*.local
+
+# 但保留模板文件
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+node_modules/
