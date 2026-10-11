@@ -32,7 +32,7 @@ MODEL=deepseek-flash
 ## 运行
 
 ```bash
-python f.py
+python firstDemo/first.py
 ```
 
 脚本会按 `APP_ENV` 加载对应环境文件（如 `.env.development`），读取 `DEEPSEEK_API_KEY`，向 DeepSeek 发起一次对话请求并打印结果。
@@ -48,3 +48,21 @@ python f.py
 ## 安全提示
 
 `.env` 系列文件已通过 `.gitignore` 排除。如果密钥曾经被提交或外泄，请立刻到平台后台删除该密钥并重新生成。
+
+为防忽略规则被误改，本项目额外加了三层保护：
+
+| 保护层 | 位置 | 作用 |
+| --- | --- | --- |
+| 仓库内忽略规则 | `.gitignore` | 常规忽略，会随仓库一起提交 |
+| 本地备份忽略规则 | `.git/info/exclude` | 存在 `.git` 内，即使 `.gitignore` 被误改名也仍然生效 |
+| 提交前钩子 | `.git/hooks/pre-commit` | 暂存区出现 `.env*` 文件或疑似真实密钥时直接阻止提交 |
+
+提交前想自查，运行：
+
+```bash
+./check-secrets.sh
+```
+
+脚本会检查 `.gitignore` 文件名是否正常、密钥文件是否真被忽略、已跟踪文件中是否有漏网密钥、暂存区是否干净。
+
+> 注意：`.gitignore` 一旦被改名（例如变成名字前带空格的 ` .gitignore`），Git 就不会读取它，忽略规则会**整体失效**。用 `ls -b | grep gitignore` 可以一眼看出文件名是否异常。
